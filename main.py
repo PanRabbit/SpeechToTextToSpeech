@@ -1,6 +1,7 @@
 import requests
 import speech_recognition as sr
 import azure.cognitiveservices.speech as speechsdk
+from pynput import keyboard
 
 def recognize_speech():
     recognizer = sr.Recognizer()
@@ -41,33 +42,58 @@ def local_text_to_speech(text, speaker_wav, language):
         print(f"Request failed: {e}")
         return None
 
-def text_to_speech(text: str):
-    # Replace with your own subscription key and service region
-    speech_key = "YOUR_AZURE_SPEECH_KEY"
-    service_region = "YOUR_REGION"
+def azure_tts(text):
+    with open("api.txt") as file:
+        key = file.read()
+        file.close
 
-    # Create a speech configuration
+    # Creates an instance of a speech config with specified subscription key and service region.
+    speech_key = key
+    service_region = "uksouth"
+
     speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+    # Note: the voice setting will not overwrite the voice element in input SSML.
+    speech_config.speech_synthesis_voice_name = "en-IE-EmilyNeural"
 
-    # Create a speech synthesizer with the default speaker output
+
+    # use the default speaker as audio output.
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
-    # Perform the text-to-speech conversion
-    print(f"Synthesizing speech for: {text}")
     result = speech_synthesizer.speak_text_async(text).get()
-
-    # Check the result
+    # Check result
     if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-        print("Speech synthesized successfully.")
+        print("Speech synthesized for text [{}]".format(text))
     elif result.reason == speechsdk.ResultReason.Canceled:
         cancellation_details = result.cancellation_details
-        print(f"Speech synthesis canceled: {cancellation_details.reason}")
+        print("Speech synthesis canceled: {}".format(cancellation_details.reason))
         if cancellation_details.reason == speechsdk.CancellationReason.Error:
-            print(f"Error details: {cancellation_details.error_details}")
+            print("Error details: {}".format(cancellation_details.error_details))
+
+
+def main():
+    listen_is_on = True
+    with keyboard.Events() as events:
+        for event in events:
+            # Check if the event is a key press and if the key is the backtick
+            try:
+                if isinstance(event, keyboard.Events.Press) and event.key.char == '`':
+                    listen_is_on = not listen_is_on
+                    print(listen_is_on)
+                elif isinstance(event, keyboard.Events.Press) and event.key.char == 'b' and listen_is_on == True:
+                    text = recognize_speech()
+                    azure_tts(text)
+                else:
+                    print('Received event {}'.format(event))
+            except:
+                print("Womp Womp")
+
 
 if __name__ == "__main__":
-    # Example text to synthesize
-    text_to_speak = "Hello! This is an example of speech synthesis using Microsoft Azure."
-    text_to_speech(text_to_speak)
+    # text = "Hi, this is Emily"
+    # text = recognize_speech()
+    # azure_tts(text)
+    main()
 
 
+    #b to start
+    #num enter to toggle
