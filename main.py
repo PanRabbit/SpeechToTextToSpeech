@@ -69,23 +69,24 @@ def azure_tts(text):
         if cancellation_details.reason == speechsdk.CancellationReason.Error:
             print("Error details: {}".format(cancellation_details.error_details))
 
-
 def main():
     listen_is_on = True
     with keyboard.Events() as events:
         for event in events:
-            # Check if the event is a key press and if the key is the backtick
             try:
+                # Check if the event is a key press and if the key is the backtick
                 if isinstance(event, keyboard.Events.Press) and event.key.char == '`':
                     listen_is_on = not listen_is_on
-                    print(listen_is_on)
-                elif isinstance(event, keyboard.Events.Press) and event.key.char == 'b' and listen_is_on == True:
+                    print("Listening is now:", listen_is_on)
+                elif isinstance(event, keyboard.Events.Press) and event.key.char == 'b' and listen_is_on:
                     text = recognize_speech()
                     azure_tts(text)
                 else:
-                    print('Received event {}'.format(event))
-            except:
-                print("Womp Womp")
+                    print('Received event: {}'.format(event))
+            except AttributeError as e:
+                print(f"Attribute Womp Womp: {e}. This may occur if a non-character key is pressed.")
+            except Exception as e:
+                print(f"An unexpected Womp Womp occurred: {e}")
 
 
 if __name__ == "__main__":
